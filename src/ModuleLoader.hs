@@ -4,17 +4,20 @@
 {-# LANGUAGE UnboxedTuples #-}
 module ModuleLoader where
 
-import GHCi.ObjLink (ShouldRetainCAFs(RetainCAFs), initObjLinker, loadDLL, resolveObjs, lookupSymbol)
 import GHC.Exts (addrToAny#, Ptr(..))
+import GHCi.ObjLink
 
 loadModule :: FilePath -> String -> IO a
 loadModule fp symbol = do
   initObjLinker RetainCAFs
 
-  -- load library
+  {-
+  -- load library (needs "a.out" compiled with -shared)
   loadDLL fp >>= \case
     Just err -> error err
     Nothing -> pure ()
+  -}
+  loadObj fp
 
   -- resolve objects
   resolveObjs >>= \case
@@ -25,3 +28,6 @@ loadModule fp symbol = do
     Nothing -> error "Symbol not found"
     Just (Ptr addr) -> case addrToAny# addr of
       (# a #) -> pure a
+
+unloadModule :: FilePath -> IO ()
+unloadModule = unloadObj
